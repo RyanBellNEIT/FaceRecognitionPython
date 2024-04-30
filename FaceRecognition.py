@@ -1,4 +1,5 @@
 import cv2
+import mediapipe as mp
 
 cv2.namedWindow("Preview")
 vc = cv2.VideoCapture(0)
