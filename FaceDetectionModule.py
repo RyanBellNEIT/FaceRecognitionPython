@@ -1,5 +1,7 @@
 import cv2
 import mediapipe as mp
+from PIL import Image
+
 
 class FaceDetector():
     def __init__(self, minDetectionCon = 0.5):
@@ -32,11 +34,8 @@ class FaceDetector():
                     cv2.putText(frame, f'{int(detection.score[0]*100)}%', 
                         (bbox[0], bbox[1]-20), cv2.FONT_HERSHEY_PLAIN,
                         2, (255, 0, 255), 2)
-                    
 
-                print(type(detection.score))
-
-                #if detection.score > 0.95:
+                #if detection.score[0] >= 0.90:
                     #print("Good image")
                 #else:
                     #print("Bad image")
@@ -55,6 +54,10 @@ def main():
     while True:
         #Reading in the capture image
         success, frame = cap.read()
+
+        imgArr = mp.ImageFrame(image_format= mp.ImageFormat.SRGB, data=frame).numpy_view()
+        newImg = Image.fromarray(imgArr)
+        newImg.save('new.png')
 
         #Finding the faces in the capture, and then displaying them.
         frame, bboxs = detector.findFaces(frame)
