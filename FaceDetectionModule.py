@@ -1,46 +1,62 @@
 import cv2
+import face_recognition
 import mediapipe as mp
 from PIL import Image
+import numpy as np
+import time
 
+#TODO: Set up tkinter to make an actual program for this class to be used in.
 
 class FaceDetector():
+
+    face_match = False
+    inital_image_name = None
+    faceSaved = None
+
     def __init__(self, minDetectionCon = 0.5):
 
         self.minDetectionCon = minDetectionCon
 
-        self.mpFaceDetection = mp.solutions.face_detection
-        self.mpDraw = mp.solutions.drawing_utils
-        self.faceDetection = self.mpFaceDetection.FaceDetection(self.minDetectionCon)
+            
+    def save_face(self, frame, fileName):
+        imgArr = mp.ImageFrame(image_format= mp.ImageFormat.SRGB, data=frame).numpy_view()
+        newImg = Image.fromarray(imgArr)
+        newImg.save(fileName)
+        self.inital_image_name = fileName
+        self.faceSaved = True
 
-    def findFaces(self, frame, draw = True):
-        imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        self.results = self.faceDetection.process(imgRGB)
+    def compare_faces(self, frame):
+        img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        bboxs = []
+        unknown_face_image = face_recognition.load_image_file("2.png")
+        unknown_face_encoding = face_recognition.face_encodings(unknown_face_image)[0]
 
-        if self.results.detections:
-            for id, detection in enumerate(self.results.detections):
+        known_face_image = face_recognition.load_image_file(self.inital_image_name)
+        known_face_encoding = face_recognition.face_encodings(known_face_image)
 
-                #Creating the rectangle for drawing
-                bboxC = detection.location_data.relative_bounding_box
-                imgH, imgW, imgC = frame.shape
-                bbox = int(bboxC.xmin * imgW), int(bboxC.ymin * imgH), \
-                       int(bboxC.width * imgW), int(bboxC.height * imgH)
-                
-                bboxs.append([bbox, detection.score])
+        if True in face_recognition.compare_faces(known_face_encoding, unknown_face_encoding):
+            self.face_match = True
+        else:
+            self.face_match = False
 
-                if draw:
-                    cv2.rectangle(frame, bbox, (255, 0, 255), 2)
-                    cv2.putText(frame, f'{int(detection.score[0]*100)}%', 
-                        (bbox[0], bbox[1]-20), cv2.FONT_HERSHEY_PLAIN,
-                        2, (255, 0, 255), 2)
+    def find_faces(self, frame, draw = True):
+        img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                #if detection.score[0] >= 0.90:
-                    #print("Good image")
-                #else:
-                    #print("Bad image")
-                
-        return frame, bboxs
+        face_locations = face_recognition.face_locations(img_rgb)
+        face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
+
+        for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+            if self.faceSaved != True:
+                self.save_face(frame, "1.png")
+            else:
+                self.save_face(frame, "2.png")
+                self.compare_faces(frame)
+                print(self.face_match)
+
+            cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
+
+        return frame
+
 
 def main():
     #Naming window, and allowing fullscreen.
@@ -55,12 +71,8 @@ def main():
         #Reading in the capture image
         success, frame = cap.read()
 
-        imgArr = mp.ImageFrame(image_format= mp.ImageFormat.SRGB, data=frame).numpy_view()
-        newImg = Image.fromarray(imgArr)
-        newImg.save('new.png')
-
         #Finding the faces in the capture, and then displaying them.
-        frame, bboxs = detector.findFaces(frame)
+        frame = detector.find_faces(frame)
 
         cv2.imshow("Face Detection", frame)
 
