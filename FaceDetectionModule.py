@@ -2,16 +2,23 @@ import cv2
 import face_recognition
 import mediapipe as mp
 from PIL import Image
-import numpy as np
-import time
+import customtkinter
 
 #TODO: Set up tkinter to make an actual program for this class to be used in.
+
+customtkinter.set_appearance_mode("dark")
+customtkinter.set_default_color_theme("dark-blue")
+
+root = customtkinter.CTk()
+root.geometry("500x350")
+label = customtkinter.CTkLabel(root)
+label.grid(row=0, column=0)
 
 class FaceDetector():
 
     face_match = False
     inital_image_name = None
-    faceSaved = None
+    face_saved = None
 
     def __init__(self, minDetectionCon = 0.5):
 
@@ -23,7 +30,7 @@ class FaceDetector():
         newImg = Image.fromarray(imgArr)
         newImg.save(fileName)
         self.inital_image_name = fileName
-        self.faceSaved = True
+        self.face_saved = True
 
     def compare_faces(self, frame):
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -46,7 +53,7 @@ class FaceDetector():
         face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
 
         for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-            if self.faceSaved != True:
+            if self.face_saved != True:
                 self.save_face(frame, "1.png")
             else:
                 self.save_face(frame, "2.png")
