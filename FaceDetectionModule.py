@@ -1,7 +1,7 @@
 import cv2
 import face_recognition
 import mediapipe as mp
-from PIL import Image
+from PIL import Image, ImageTk
 import customtkinter
 
 #TODO: Set up tkinter to make an actual program for this class to be used in.
@@ -10,9 +10,19 @@ customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
 
 root = customtkinter.CTk()
-root.geometry("500x350")
-label = customtkinter.CTkLabel(root)
-label.grid(row=0, column=0)
+root.maxsize(1000, 700)
+
+top_frame = customtkinter.CTkFrame(root, height=100)
+top_frame.grid(row=0, column=0, padx=10, pady=5, sticky='EW')
+
+main_frame = customtkinter.CTkFrame(root, height=400)
+main_frame.grid(row=1, column=0, padx=10, pady=5, sticky='EW')
+
+bottom_frame = customtkinter.CTkFrame(root, height=200)
+bottom_frame.grid(row=2, column=0, padx=10, pady=5, sticky='EW')
+
+#label = customtkinter.CTkLabel(master=frame, text="Face Detection")
+#label.pack(pady=12, padx=10)
 
 class FaceDetector():
 
@@ -63,37 +73,53 @@ class FaceDetector():
             cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
 
         return frame
+    
+    def show_frames():
+
+        #Getting your video capture, capture 0 is default.
+        cap = cv2.VideoCapture(0)
+        detector = FaceDetector(0.75)
+
+        #Get latest frame and convert into image
+        cv2image= cv2.cvtColor(cap.read()[1],cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(cv2image)
+
+        #Convert image to PhotoImage
+        imgtk = ImageTk.PhotoImage(image = img)
+        label.imgtk = imgtk
+        label.configure(image = imgtk)
+
+#def main():
+#    #Naming window, and allowing fullscreen.
+#    cv2.namedWindow("Face Detection", cv2.WND_PROP_FULLSCREEN)
+#
+#    #Getting your video capture, capture 0 is default.
+#    cap = cv2.VideoCapture(0)
+#
+#    detector = FaceDetector(0.75)
+#
+#    while True:
+#        #Reading in the capture image
+#        success, frame = cap.read()
+#
+#        #Finding the faces in the capture, and then displaying them.
+#        frame = detector.find_faces(frame)
+#
+#        cv2.imshow("Face Detection", frame)
+#
+#        #Controlling the FPS
+#        key = cv2.waitKey(20)
+#        #Exit on ESC
+#        if key == 27:
+#            break
+#
+#    #Releases capture object
+#    cap.release()
+#    #Remove window
+#    cv2.destroyWindow("Preview")
 
 
-def main():
-    #Naming window, and allowing fullscreen.
-    cv2.namedWindow("Face Detection", cv2.WND_PROP_FULLSCREEN)
+#if __name__ == "__main__":
+    #main()
 
-    #Getting your video capture, capture 0 is default.
-    cap = cv2.VideoCapture(0)
-
-    detector = FaceDetector(0.75)
-
-    while True:
-        #Reading in the capture image
-        success, frame = cap.read()
-
-        #Finding the faces in the capture, and then displaying them.
-        frame = detector.find_faces(frame)
-
-        cv2.imshow("Face Detection", frame)
-
-        #Controlling the FPS
-        key = cv2.waitKey(20)
-        #Exit on ESC
-        if key == 27:
-            break
-
-    #Releases capture object
-    cap.release()
-    #Remove window
-    cv2.destroyWindow("Preview")
-
-
-if __name__ == "__main__":
-    main()
+root.mainloop()
