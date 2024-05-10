@@ -56,8 +56,46 @@ bottom_button.place(relx=.5, rely=.5, anchor="center")
 #BOTTOM FRAME END
 #------------------------------------------------------------------
 
-#label = customtkinter.CTkLabel(master=frame, text="Face Detection")
-#label.pack(pady=12, padx=10)
+cap = cv2.VideoCapture(0)
+
+def find_faces():
+    img_rgb = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2RGB)
+    img = Image.fromarray(img_rgb)
+
+
+    imgtk = ImageTk.PhotoImage(image=img)
+    left_cap_label.imgtk = imgtk
+    left_cap_label.configure(image=imgtk)
+
+    while True:
+        img_rgb = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(img_rgb)
+
+        imgtk = ImageTk.PhotoImage(image=img)
+        left_cap_label.imgtk = imgtk
+        left_cap_label.configure(image=imgtk)
+
+        #Controlling the FPS
+        key = cv2.waitKey(20)
+        root.update()
+    
+    cap.release()
+
+    #face_locations = face_recognition.face_locations(img_rgb)
+
+    #face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
+    
+    #for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+    #    if self.face_saved != True:
+    #        self.save_face(frame, "1.png")
+    #    else:
+    #        self.save_face(frame, "2.png")
+    #        self.compare_faces(frame)
+    #        print(self.face_match)
+    #    cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
+    #return frame
+
+left_cap_label.after(20, find_faces)
 
 class FaceDetector():
 
@@ -157,4 +195,6 @@ class FaceDetector():
 #if __name__ == "__main__":
     #main()
 
+find_faces()
 root.mainloop()
+cap.release()
