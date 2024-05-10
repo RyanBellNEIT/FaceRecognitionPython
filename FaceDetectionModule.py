@@ -10,16 +10,51 @@ customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
 
 root = customtkinter.CTk()
-root.maxsize(1000, 700)
+root.maxsize(1020, 740)
+root.minsize(1020, 740)
 
-top_frame = customtkinter.CTkFrame(root, height=100)
-top_frame.grid(row=0, column=0, padx=10, pady=5, sticky='EW')
+#------------------------------------------------------------------
+#TOP FRAME START
+#------------------------------------------------------------------
+top_frame = customtkinter.CTkFrame(root, height=100, width=1000)
+top_frame.grid(row=0, column=0, padx=(10, 10), pady=5, sticky='EW')
+top_frame.grid_propagate(False)
 
-main_frame = customtkinter.CTkFrame(root, height=400)
+
+top_label = customtkinter.CTkLabel(master=top_frame, text="Face Recoginition Software", font=('Helvetica', 30), bg_color="green")
+top_label.place(relx=.5, rely=.5, anchor="center")
+#------------------------------------------------------------------
+#TOP FRAME END
+#------------------------------------------------------------------
+
+#------------------------------------------------------------------
+#MAIN FRAME START
+#------------------------------------------------------------------
+main_frame = customtkinter.CTkFrame(root, height=400, width=1000)
 main_frame.grid(row=1, column=0, padx=10, pady=5, sticky='EW')
+main_frame.grid_propagate(False)
 
-bottom_frame = customtkinter.CTkFrame(root, height=200)
+left_cap_label = customtkinter.CTkLabel(master=main_frame, text="left_cap_label")
+left_cap_label.grid(row=0, column=0)
+
+right_cap_label = customtkinter.CTkLabel(master=main_frame, text="right_cap_label")
+right_cap_label.grid(row=0, column=1)
+#------------------------------------------------------------------
+#MAIN FRAME END
+#------------------------------------------------------------------
+
+#------------------------------------------------------------------
+#BOTTOM FRAME START
+#------------------------------------------------------------------
+bottom_frame = customtkinter.CTkFrame(root, height=200, width=1000)
 bottom_frame.grid(row=2, column=0, padx=10, pady=5, sticky='EW')
+bottom_frame.grid_propagate(False)
+
+bottom_button = customtkinter.CTkButton(master=bottom_frame, width=280, height=56, text="Start Camera", font=('Helvetica', 30))
+bottom_button.place(relx=.5, rely=.5, anchor="center")
+#------------------------------------------------------------------
+#BOTTOM FRAME END
+#------------------------------------------------------------------
 
 #label = customtkinter.CTkLabel(master=frame, text="Face Detection")
 #label.pack(pady=12, padx=10)
