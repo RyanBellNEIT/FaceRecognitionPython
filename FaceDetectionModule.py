@@ -59,14 +59,6 @@ bottom_button.place(relx=.5, rely=.5, anchor="center")
 cap = cv2.VideoCapture(0)
 
 def find_faces():
-    img_rgb = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2RGB)
-    img = Image.fromarray(img_rgb)
-
-
-    imgtk = ImageTk.PhotoImage(image=img)
-    left_cap_label.imgtk = imgtk
-    left_cap_label.configure(image=imgtk)
-
     while True:
         img_rgb = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2RGB)
         img = Image.fromarray(img_rgb)
@@ -75,15 +67,15 @@ def find_faces():
         left_cap_label.imgtk = imgtk
         left_cap_label.configure(image=imgtk)
 
+        face_locations = face_recognition.face_locations(img_rgb)
+        face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
+
         #Controlling the FPS
         key = cv2.waitKey(20)
         root.update()
     
     cap.release()
-
-    #face_locations = face_recognition.face_locations(img_rgb)
-
-    #face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
+    
     
     #for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
     #    if self.face_saved != True:
@@ -95,7 +87,6 @@ def find_faces():
     #    cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
     #return frame
 
-left_cap_label.after(20, find_faces)
 
 class FaceDetector():
 
