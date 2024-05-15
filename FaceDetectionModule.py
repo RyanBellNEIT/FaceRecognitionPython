@@ -3,6 +3,7 @@ import face_recognition
 import mediapipe as mp
 from PIL import Image, ImageTk
 import customtkinter
+import os
 
 #TODO: Set up tkinter to make an actual program for this class to be used in.
 
@@ -43,6 +44,62 @@ right_cap_label.grid(row=0, column=1)
 #MAIN FRAME END
 #------------------------------------------------------------------
 
+def update_cam(frame, is_not_first_pic):
+        if is_not_first_pic != True:
+            img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(img_rgb)
+            imgtk = ImageTk.PhotoImage(image=img)
+            left_cap_label.imgtk = imgtk
+            left_cap_label.configure(image=imgtk)
+        else:
+            img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(img_rgb)
+            imgtk = ImageTk.PhotoImage(image=img)
+            right_cap_label.imgtk = imgtk
+            right_cap_label.configure(image=imgtk)
+
+
+def find_faces():
+    cap = cv2.VideoCapture(0)
+
+    detector = FaceDetector(0.75)
+
+    while detector.face_saved[0] != True:
+        frame = cap.read()[1]
+
+        #Allows capture to display on tkinter UI
+        update_cam(frame, detector.face_saved[0])
+
+        #Need to make it so it uses the class functions and variables, from this function.
+        frame = detector.find_faces(frame)
+
+        #Updates on UI after changing frame variable
+        update_cam(frame, detector.face_saved[0])
+
+        #Controlling the FPS
+        key = cv2.waitKey(20)
+        root.update()
+
+    while detector.face_saved[0] == True and detector.face_saved[1] != True:
+        frame = cap.read()[1]
+
+        #Allows capture to display on tkinter UI
+        update_cam(frame, detector.face_saved[0])
+        print("In second loop")
+
+        #Need to make it so it uses the class functions and variables, from this function.
+        frame = detector.find_faces(frame)
+
+        #Updates on UI after changing frame variable
+        update_cam(frame, detector.face_saved[0])
+
+        #Controlling the FPS
+        key = cv2.waitKey(20)
+        root.update()
+    
+    cap.release()
+
+
 #------------------------------------------------------------------
 #BOTTOM FRAME START
 #------------------------------------------------------------------
@@ -50,31 +107,11 @@ bottom_frame = customtkinter.CTkFrame(root, height=200, width=1000)
 bottom_frame.grid(row=2, column=0, padx=10, pady=5, sticky='EW')
 bottom_frame.grid_propagate(False)
 
-bottom_button = customtkinter.CTkButton(master=bottom_frame, width=280, height=56, text="Start Camera", font=('Helvetica', 30))
+bottom_button = customtkinter.CTkButton(master=bottom_frame, width=280, height=56, text="Start Camera", font=('Helvetica', 30), command=find_faces)
 bottom_button.place(relx=.5, rely=.5, anchor="center")
 #------------------------------------------------------------------
 #BOTTOM FRAME END
 #------------------------------------------------------------------
-
-cap = cv2.VideoCapture(0)
-
-def find_faces():
-    while True:
-        img_rgb = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(img_rgb)
-
-        imgtk = ImageTk.PhotoImage(image=img)
-        left_cap_label.imgtk = imgtk
-        left_cap_label.configure(image=imgtk)
-
-        face_locations = face_recognition.face_locations(img_rgb)
-        face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
-
-        #Controlling the FPS
-        key = cv2.waitKey(20)
-        root.update()
-    
-    cap.release()
     
     
     #for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
@@ -90,9 +127,9 @@ def find_faces():
 
 class FaceDetector():
 
+    face_saved = [False, False]
     face_match = False
     inital_image_name = None
-    face_saved = None
 
     def __init__(self, minDetectionCon = 0.5):
 
@@ -104,7 +141,11 @@ class FaceDetector():
         newImg = Image.fromarray(imgArr)
         newImg.save(fileName)
         self.inital_image_name = fileName
-        self.face_saved = True
+        if self.face_saved[0] != True:
+            self.face_saved[0] = True
+        else:
+            self.face_saved[1] = True
+
 
     def compare_faces(self, frame):
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -127,9 +168,9 @@ class FaceDetector():
         face_encodings = face_recognition.face_encodings(img_rgb, face_locations)
 
         for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-            if self.face_saved != True:
+            if self.face_saved[0] != True:
                 self.save_face(frame, "1.png")
-            else:
+            elif self.face_saved[1] != True:
                 self.save_face(frame, "2.png")
                 self.compare_faces(frame)
                 print(self.face_match)
@@ -186,6 +227,6 @@ class FaceDetector():
 #if __name__ == "__main__":
     #main()
 
-find_faces()
+#find_faces()
 root.mainloop()
 cap.release()
