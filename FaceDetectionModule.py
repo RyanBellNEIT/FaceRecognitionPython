@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import customtkinter
 import os
 
-#TODO: Set up tkinter to make an actual program for this class to be used in.
+#TODO: Fix lag when start camera button is pressed.
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -33,13 +33,12 @@ top_label.place(relx=.5, rely=.5, anchor="center")
 #------------------------------------------------------------------
 main_frame = customtkinter.CTkFrame(root, height=400, width=1000)
 main_frame.grid(row=1, column=0, padx=10, pady=5, sticky='EW')
-main_frame.grid_propagate(False)
 
-left_cap_label = customtkinter.CTkLabel(master=main_frame, text="left_cap_label")
-left_cap_label.grid(row=0, column=0)
+left_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5)
+left_cap_label.place(relx=.25, rely=.5, anchor="center")
 
-right_cap_label = customtkinter.CTkLabel(master=main_frame, text="right_cap_label")
-right_cap_label.grid(row=0, column=1)
+right_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5)
+right_cap_label.place(relx=.75, rely=.5, anchor="center")
 #------------------------------------------------------------------
 #MAIN FRAME END
 #------------------------------------------------------------------
@@ -59,11 +58,41 @@ def update_cam(frame, is_not_first_pic):
             right_cap_label.configure(image=imgtk)
 
 
-def find_faces():
-    cap = cv2.VideoCapture(0)
+def start_camera():
+    bottom_button.configure(state="disabled", text="Capturing...")
+    bottom_button.update()
 
-    detector = FaceDetector(0.75)
+    #Allows for multi-platform use, using CAP_DSHOW on windows make camera work faster, but doesn't work on other platforms.
+    if os.name == 'nt':
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    else:
+        cap = cv2.VideoCapture(0)
+    detector = FaceDetector()
 
+    #Second loop of the program, only loops after the first face picture was captured
+    while detector.face_saved[0] == True and detector.face_saved[1] != True:
+        frame = cap.read()[1]
+
+        #Allows capture to display on tkinter UI
+        update_cam(frame, detector.face_saved[0])
+
+        #Need to make it so it uses the class functions and variables, from this function.
+        frame = detector.find_faces(frame)
+
+        #Updates on UI after changing frame variable
+        if detector.face_saved[1] == False:
+            update_cam(frame, detector.face_saved[0])
+        else:
+            top_label.configure(text="MATCH" if detector.face_match else "NON-MATCH",
+                                bg_color="green" if detector.face_match else "red")
+            top_label.update()
+            break
+
+        #Controlling the FPS
+        key = cv2.waitKey(20)
+        root.update()
+    
+    #First loop of the program, loops when user selects start camera button for the first time.
     while detector.face_saved[0] != True:
         frame = cap.read()[1]
 
@@ -73,31 +102,23 @@ def find_faces():
         #Need to make it so it uses the class functions and variables, from this function.
         frame = detector.find_faces(frame)
 
-        #Updates on UI after changing frame variable
-        update_cam(frame, detector.face_saved[0])
-
-        #Controlling the FPS
-        key = cv2.waitKey(20)
-        root.update()
-
-    while detector.face_saved[0] == True and detector.face_saved[1] != True:
-        frame = cap.read()[1]
-
-        #Allows capture to display on tkinter UI
-        update_cam(frame, detector.face_saved[0])
-        print("In second loop")
-
-        #Need to make it so it uses the class functions and variables, from this function.
-        frame = detector.find_faces(frame)
-
-        #Updates on UI after changing frame variable
-        update_cam(frame, detector.face_saved[0])
+        if detector.face_saved[0] == False:
+            update_cam(frame, detector.face_saved[0])
+        else:
+            break
 
         #Controlling the FPS
         key = cv2.waitKey(20)
         root.update()
     
+    bottom_button.configure(state="normal", text="Start Camera")
+    bottom_button.update()
     cap.release()
+
+def setup_start():
+    bottom_button.configure(text="Initializing...")
+    bottom_button.update()
+    start_camera()
 
 
 #------------------------------------------------------------------
@@ -107,23 +128,11 @@ bottom_frame = customtkinter.CTkFrame(root, height=200, width=1000)
 bottom_frame.grid(row=2, column=0, padx=10, pady=5, sticky='EW')
 bottom_frame.grid_propagate(False)
 
-bottom_button = customtkinter.CTkButton(master=bottom_frame, width=280, height=56, text="Start Camera", font=('Helvetica', 30), command=find_faces)
+bottom_button = customtkinter.CTkButton(master=bottom_frame, width=280, height=56, text="Start Camera", font=('Helvetica', 30), command=setup_start)
 bottom_button.place(relx=.5, rely=.5, anchor="center")
 #------------------------------------------------------------------
 #BOTTOM FRAME END
 #------------------------------------------------------------------
-    
-    
-    #for(top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-    #    if self.face_saved != True:
-    #        self.save_face(frame, "1.png")
-    #    else:
-    #        self.save_face(frame, "2.png")
-    #        self.compare_faces(frame)
-    #        print(self.face_match)
-    #    cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
-    #return frame
-
 
 class FaceDetector():
 
@@ -132,7 +141,6 @@ class FaceDetector():
     inital_image_name = None
 
     def __init__(self, minDetectionCon = 0.5):
-
         self.minDetectionCon = minDetectionCon
 
             
@@ -178,55 +186,5 @@ class FaceDetector():
             cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
 
         return frame
-    
-    def show_frames():
 
-        #Getting your video capture, capture 0 is default.
-        cap = cv2.VideoCapture(0)
-        detector = FaceDetector(0.75)
-
-        #Get latest frame and convert into image
-        cv2image= cv2.cvtColor(cap.read()[1],cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(cv2image)
-
-        #Convert image to PhotoImage
-        imgtk = ImageTk.PhotoImage(image = img)
-        label.imgtk = imgtk
-        label.configure(image = imgtk)
-
-#def main():
-#    #Naming window, and allowing fullscreen.
-#    cv2.namedWindow("Face Detection", cv2.WND_PROP_FULLSCREEN)
-#
-#    #Getting your video capture, capture 0 is default.
-#    cap = cv2.VideoCapture(0)
-#
-#    detector = FaceDetector(0.75)
-#
-#    while True:
-#        #Reading in the capture image
-#        success, frame = cap.read()
-#
-#        #Finding the faces in the capture, and then displaying them.
-#        frame = detector.find_faces(frame)
-#
-#        cv2.imshow("Face Detection", frame)
-#
-#        #Controlling the FPS
-#        key = cv2.waitKey(20)
-#        #Exit on ESC
-#        if key == 27:
-#            break
-#
-#    #Releases capture object
-#    cap.release()
-#    #Remove window
-#    cv2.destroyWindow("Preview")
-
-
-#if __name__ == "__main__":
-    #main()
-
-#find_faces()
 root.mainloop()
-cap.release()
