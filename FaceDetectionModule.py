@@ -22,7 +22,7 @@ top_frame.grid(row=0, column=0, padx=(10, 10), pady=5, sticky='EW')
 top_frame.grid_propagate(False)
 
 
-top_label = customtkinter.CTkLabel(master=top_frame, text="Face Recoginition Software", font=('Helvetica', 30), bg_color="green")
+top_label = customtkinter.CTkLabel(master=top_frame, text="Face Recoginition", font=('Helvetica', 30))
 top_label.place(relx=.5, rely=.5, anchor="center")
 #------------------------------------------------------------------
 #TOP FRAME END
@@ -34,14 +34,36 @@ top_label.place(relx=.5, rely=.5, anchor="center")
 main_frame = customtkinter.CTkFrame(root, height=400, width=1000)
 main_frame.grid(row=1, column=0, padx=10, pady=5, sticky='EW')
 
-left_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5)
+left_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5, text="")
 left_cap_label.place(relx=.25, rely=.5, anchor="center")
 
-right_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5)
+right_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5, text="")
 right_cap_label.place(relx=.75, rely=.5, anchor="center")
 #------------------------------------------------------------------
 #MAIN FRAME END
 #------------------------------------------------------------------
+
+def reset_match(face_detector):
+    #Resetting top label
+    top_label.configure(text="Face Recoginition", font=('Helvetica', 30), bg_color="green")
+    top_label.update()
+
+    #Resetting left picture
+    left_cap_label.imgtk = None
+    left_cap_label.configure(image=None)
+    left_cap_label.update()
+
+    #Resetting right picture
+    right_cap_label.imgtk = None
+    right_cap_label.configure(image=None)
+    right_cap_label.update()
+
+    #Resetting right picture
+    bottom_button.configure(text="Start Camera", command=start_camera)
+    bottom_button.update()
+
+    face_detector.face_saved[0], face_detector.face_saved[1] = False, False
+    
 
 def update_cam(frame, is_not_first_pic):
         if is_not_first_pic != True:
@@ -78,12 +100,11 @@ def start_camera():
 
         #Need to make it so it uses the class functions and variables, from this function.
         frame = detector.find_faces(frame)
-
         #Updates on UI after changing frame variable
-        if detector.face_saved[1] == False:
-            update_cam(frame, detector.face_saved[0])
-        else:
-            top_label.configure(text="MATCH" if detector.face_match else "NON-MATCH",
+        update_cam(frame, True)
+        
+        if detector.face_saved[1] == True:
+            top_label.configure(text=" MATCH " if detector.face_match else " NON-MATCH ",
                                 bg_color="green" if detector.face_match else "red")
             top_label.update()
             break
@@ -101,18 +122,22 @@ def start_camera():
 
         #Need to make it so it uses the class functions and variables, from this function.
         frame = detector.find_faces(frame)
+        update_cam(frame, False)
 
-        if detector.face_saved[0] == False:
-            update_cam(frame, detector.face_saved[0])
-        else:
+        if detector.face_saved[0] == True:
             break
 
         #Controlling the FPS
-        key = cv2.waitKey(20)
+        #key = cv2.waitKey(20)
         root.update()
+
     
-    bottom_button.configure(state="normal", text="Start Camera")
-    bottom_button.update()
+    if detector.face_saved[1] == True:
+        bottom_button.configure(state="normal", text="Clear", command= lambda: reset_match(detector))
+        bottom_button.update()
+    else:
+        bottom_button.configure(state="normal", text="Start Camera", command=start_camera)
+        bottom_button.update()
     cap.release()
 
 def setup_start():
@@ -161,7 +186,7 @@ class FaceDetector():
         unknown_face_image = face_recognition.load_image_file("2.png")
         unknown_face_encoding = face_recognition.face_encodings(unknown_face_image)[0]
 
-        known_face_image = face_recognition.load_image_file(self.inital_image_name)
+        known_face_image = face_recognition.load_image_file("1.png")
         known_face_encoding = face_recognition.face_encodings(known_face_image)
 
         if True in face_recognition.compare_faces(known_face_encoding, unknown_face_encoding):
@@ -181,7 +206,6 @@ class FaceDetector():
             elif self.face_saved[1] != True:
                 self.save_face(frame, "2.png")
                 self.compare_faces(frame)
-                print(self.face_match)
 
             cv2.rectangle(frame, (left, top), (right, bottom), (255, 0, 255), 2)
 
