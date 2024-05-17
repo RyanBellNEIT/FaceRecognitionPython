@@ -39,6 +39,12 @@ left_cap_label.place(relx=.25, rely=.5, anchor="center")
 
 right_cap_label = customtkinter.CTkLabel(master=main_frame, padx=5, text="")
 right_cap_label.place(relx=.75, rely=.5, anchor="center")
+
+left_cap_text = customtkinter.CTkLabel(master=main_frame, padx=5, text="ID Photo")
+left_cap_text.place(relx=.25, rely=.95, anchor="center")
+
+right_cap_text = customtkinter.CTkLabel(master=main_frame, padx=5, text="Face Photo")
+right_cap_text.place(relx=.75, rely=.95, anchor="center")
 #------------------------------------------------------------------
 #MAIN FRAME END
 #------------------------------------------------------------------
@@ -89,7 +95,7 @@ def start_camera():
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     else:
         cap = cv2.VideoCapture(0)
-    detector = FaceDetector()
+    detector = FaceDetector(0.75)
 
     #Second loop of the program, only loops after the first face picture was captured
     while detector.face_saved[0] == True and detector.face_saved[1] != True:
