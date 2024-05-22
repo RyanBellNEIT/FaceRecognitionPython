@@ -5,8 +5,6 @@ from PIL import Image, ImageTk
 import customtkinter
 import os
 
-#TODO: Fix lag when start camera button is pressed.
-
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
 
@@ -64,7 +62,7 @@ def reset_match(face_detector):
     right_cap_label.configure(image=None)
     right_cap_label.update()
 
-    #Resetting right picture
+    #Resetting bottom button
     bottom_button.configure(text="Start Camera", command=start_camera)
     bottom_button.update()
 
@@ -72,16 +70,15 @@ def reset_match(face_detector):
     
 
 def update_cam(frame, is_not_first_pic):
+        
+        img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(img_rgb)
+        imgtk = ImageTk.PhotoImage(image=img)
+
         if is_not_first_pic != True:
-            img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(img_rgb)
-            imgtk = ImageTk.PhotoImage(image=img)
             left_cap_label.imgtk = imgtk
             left_cap_label.configure(image=imgtk)
         else:
-            img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(img_rgb)
-            imgtk = ImageTk.PhotoImage(image=img)
             right_cap_label.imgtk = imgtk
             right_cap_label.configure(image=imgtk)
 
@@ -95,7 +92,8 @@ def start_camera():
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     else:
         cap = cv2.VideoCapture(0)
-    detector = FaceDetector(0.75)
+    detector = FaceDetector()
+    frame = cap.read()[1]
 
     #Second loop of the program, only loops after the first face picture was captured
     while detector.face_saved[0] == True and detector.face_saved[1] != True:
@@ -166,14 +164,9 @@ bottom_button.place(relx=.5, rely=.5, anchor="center")
 #------------------------------------------------------------------
 
 class FaceDetector():
-
     face_saved = [False, False]
     face_match = False
     inital_image_name = None
-
-    def __init__(self, minDetectionCon = 0.5):
-        self.minDetectionCon = minDetectionCon
-
             
     def save_face(self, frame, fileName):
         imgArr = mp.ImageFrame(image_format= mp.ImageFormat.SRGB, data=frame).numpy_view()
